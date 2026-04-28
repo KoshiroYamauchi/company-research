@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>カンパニー調査シート</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
+  :root {
+    --bg: #0d0d0d; --surface: #161616; --border: #2a2a2a;
+    --accent: #f5c842; --accent2: #e8f542; --text: #e8e8e8; --muted: #666;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Noto Sans JP',sans-serif; min-height:100vh; padding:40px 20px; }
+  header { max-width:900px; margin:0 auto 48px; border-bottom:1px solid var(--border); padding-bottom:24px; }
+  .label { font-family:'Space Mono',monospace; font-size:11px; color:var(--accent); letter-spacing:.15em; text-transform:uppercase; margin-bottom:8px; }
+  h1 { font-size:28px; font-weight:700; letter-spacing:-.02em; line-height:1.2; margin-bottom:8px; }
+  .subtitle { color:var(--muted); font-size:13px; font-weight:300; }
+  .layout { max-width:900px; margin:0 auto; display:grid; grid-template-columns:240px 1fr; gap:32px; align-items:start; }
+  .step-nav { position:sticky; top:32px; }
+  .nav-label { font-family:'Space Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:.1em; text-transform:uppercase; margin-bottom:12px; }
+  .step-btn { display:flex; align-items:center; gap:12px; width:100%; padding:10px 12px; background:none; border:none; border-left:2px solid var(--border); color:var(--muted); cursor:pointer; text-align:left; transition:all .15s; font-family:'Noto Sans JP',sans-serif; font-size:12px; line-height:1.4; }
+  .step-btn:hover { color:var(--text); border-left-color:#444; }
+  .step-btn.active { color:var(--accent); border-left-color:var(--accent); }
+  .step-btn.has-data { color:#aaa; }
+  .step-num { font-family:'Space Mono',monospace; font-size:10px; color:inherit; min-width:24px; }
+  .panel { background:var(--surface); border:1px solid var(--border); padding:32px; }
+  .panel-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:28px; padding-bottom:20px; border-bottom:1px solid var(--border); }
+  .panel-step { font-family:'Space Mono',monospace; font-size:11px; color:var(--accent); letter-spacing:.1em; margin-bottom:6px; }
+  .panel-title { font-size:20px; font-weight:700; }
+  .panel-desc { font-size:12px; color:var(--muted); margin-top:4px; }
+  .entries-count { font-family:'Space Mono',monospace; font-size:11px; color:var(--muted); white-space:nowrap; }
+  .form-section { margin-bottom:20px; }
+  .form-label { font-size:11px; font-weight:500; color:var(--muted); letter-spacing:.08em; text-transform:uppercase; margin-bottom:8px; display:block; }
+  textarea, input[type="text"] { width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); font-family:'Noto Sans JP',sans-serif; font-size:13px; padding:12px; resize:vertical; outline:none; transition:border-color .15s; line-height:1.6; }
+  textarea:focus, input[type="text"]:focus { border-color:var(--accent); }
+  textarea { min-height:80px; }
+  .url-row { display:flex; gap:8px; align-items:center; margin-bottom:6px; }
+  .url-row input { flex:1; }
+  .btn-remove-url { background:none; border:1px solid var(--border); color:var(--muted); cursor:pointer; padding:8px 10px; font-size:16px; line-height:1; transition:all .15s; flex-shrink:0; }
+  .btn-remove-url:hover { border-color:#ff4444; color:#ff4444; }
+  .btn-add-url { background:none; border:1px dashed var(--border); color:var(--muted); cursor:pointer; padding:8px 14px; font-size:12px; font-family:'Noto Sans JP',sans-serif; width:100%; transition:all .15s; margin-top:4px; }
+  .btn-add-url:hover { border-color:var(--accent); color:var(--accent); }
+  .form-actions { display:flex; gap:10px; margin-top:24px; padding-top:20px; border-top:1px solid var(--border); }
+  .btn-submit { background:var(--accent); color:#000; border:none; padding:11px 24px; font-family:'Noto Sans JP',sans-serif; font-size:13px; font-weight:700; cursor:pointer; transition:all .15s; }
+  .btn-submit:hover { background:var(--accent2); }
+  .btn-submit:disabled { opacity:.5; cursor:not-allowed; }
+  .btn-clear { background:none; border:1px solid var(--border); color:var(--muted); padding:11px 20px; font-family:'Noto Sans JP',sans-serif; font-size:13px; cursor:pointer; transition:all .15s; }
+  .btn-clear:hover { border-color:var(--text); color:var(--text); }
+  .entries-section { margin-top:32px; padding-top:24px; border-top:1px solid var(--border); }
+  .entries-header { font-family:'Space Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:.1em; text-transform:uppercase; margin-bottom:16px; }
+  .entry-card { background:var(--bg); border:1px solid var(--border); padding:16px; margin-bottom:12px; }
+  .entry-meta { font-family:'Space Mono',monospace; font-size:10px; color:var(--muted); margin-bottom:10px; }
+  .entry-field { margin-bottom:10px; }
+  .entry-field-label { font-size:10px; color:var(--accent); text-transform:uppercase; letter-spacing:.08em; margin-bottom:3px; font-weight:500; }
+  .entry-field-value { font-size:13px; line-height:1.6; white-space:pre-wrap; color:var(--text); }
+  .entry-urls { margin-top:8px; display:flex; flex-wrap:wrap; gap:6px; }
+  .entry-url-tag { font-size:11px; color:var(--accent); border:1px solid var(--border); padding:2px 8px; text-decoration:none; font-family:'Space Mono',monospace; transition:all .15s; display:inline-block; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .entry-url-tag:hover { border-color:var(--accent); }
+  .empty-state { text-align:center; padding:32px; color:var(--muted); font-size:13px; border:1px dashed var(--border); }
+  .loading-state { text-align:center; padding:32px; color:var(--muted); font-size:13px; }
+  .toast { position:fixed; bottom:24px; right:24px; background:var(--accent); color:#000; padding:10px 20px; font-size:13px; font-weight:700; opacity:0; transform:translateY(10px); transition:all .2s; pointer-events:none; font-family:'Noto Sans JP',sans-serif; z-index:999; }
+  .toast.show { opacity:1; transform:translateY(0); }
+  .toast.error { background:#ff4444; color:#fff; }
+  @media (max-width:680px) {
+    .layout { grid-template-columns:1fr; }
+    .step-nav { position:static; }
+    .step-btn { border-left:none; border-bottom:1px solid var(--border); }
+    .step-btn.active { border-bottom-color:var(--accent); border-left:none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="label">カンパニー調査 / Company Research</div>
+  <h1>カスタマージャーニー調査シート</h1>
+  <p class="subtitle">各ステップをクリックして調査内容を入力してください。入力はAirtableに保存され、メンバー全員で共有されます。</p>
+</header>
+
+<section style="max-width:900px;margin:0 auto 40px;">
+  <div class="label" style="margin-bottom:12px;">確定版ジャーニーと絡む市場</div>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <thead>
+      <tr>
+        <th style="text-align:left;padding:10px 16px;border-bottom:1px solid #f5c842;color:#f5c842;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.08em;width:40%;">ステップ</th>
+        <th style="text-align:left;padding:10px 16px;border-bottom:1px solid #f5c842;color:#f5c842;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.08em;">内容</th>
+      </tr>
+    </thead>
+    <tbody id="journeyTable"></tbody>
+  </table>
+</section>
+
+<div class="layout">
+  <nav class="step-nav">
+    <div class="nav-label">ステップ一覧</div>
+    <div id="stepNav"></div>
+  </nav>
+  <main>
+    <div class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-step" id="panelStep"></div>
+          <div class="panel-title" id="panelTitle"></div>
+          <div class="panel-desc" id="panelDesc"></div>
+        </div>
+        <div class="entries-count" id="entriesCount"></div>
+      </div>
+      <div class="form-section">
+        <label class="form-label">絡む市場・プレイヤー</label>
+        <textarea id="fieldMarket" placeholder="例：SNSプラットフォーム市場、インフルエンサー市場..."></textarea>
+      </div>
+      <div class="form-section">
+        <label class="form-label">一般人データ・傾向</label>
+        <textarea id="fieldGeneral" placeholder="一般人の行動・データを記入..."></textarea>
+      </div>
+      <div class="form-section">
+        <label class="form-label">学生データ・傾向</label>
+        <textarea id="fieldStudent" placeholder="学生特有の行動・データを記入..."></textarea>
+      </div>
+      <div class="form-section">
+        <label class="form-label">差分・気づき（学生特有の傾向）</label>
+        <textarea id="fieldDiff" placeholder="一般人と学生の差分、気づいたことを記入..."></textarea>
+      </div>
+      <div class="form-section">
+        <label class="form-label">参考URL・データソース</label>
+        <div id="urlList"></div>
+        <button class="btn-add-url" onclick="addUrlField()">＋ URLを追加</button>
+      </div>
+      <div class="form-actions">
+        <button class="btn-submit" id="btnSubmit" onclick="submitEntry()">この内容を追加</button>
+        <button class="btn-clear" onclick="clearForm()">クリア</button>
+      </div>
+      <div class="entries-section">
+        <div class="entries-header">提出済みの調査内容</div>
+        <div id="entriesList"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TOKEN = 'patStgQ0cdLyeWjlW.fa6e6e65c39f0e06c3f4b4eef7aa62496d46d5b80c98c74ccc2cc42312ca227f';
+const BASE  = 'apph0gb0BMJ5IJk4N';
+const TABLE = 'Table 1';
+
+const STEPS = [
+  { num:1,  name:'認知',               desc:'SNS・動画・友人の話で海外旅行を意識する' },
+  { num:2,  name:'興味・検討・行き先決定', desc:'SNSでイメージを膨らませながら相場も調べる' },
+  { num:3,  name:'予算検討',            desc:'費用を調べる・お金を貯める' },
+  { num:4,  name:'不安の解消',          desc:'言語・治安・漠然とした不安を乗り越える' },
+  { num:5,  name:'決断',               desc:'友人を誘う・誘われる、行くことを決める' },
+  { num:6,  name:'時期決定',            desc:'長期休暇に合わせて日程を決める' },
+  { num:7,  name:'準備',               desc:'パスポート・航空券・保険・SIM等の手配' },
+  { num:8,  name:'出発・空港（NAA）',   desc:'空港へ・搭乗' },
+  { num:9,  name:'現地',               desc:'観光・食事・体験・ショッピング' },
+  { num:10, name:'帰国（NAA）',        desc:'空港到着' },
+  { num:11, name:'事後',               desc:'SNS投稿・友人に話す・次の旅へ' },
+];
+
+let currentStep = 1;
+let urlCount = 0;
+let cache = {};
+
+function escHtml(str){
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(msg, isError){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(()=>t.className='toast', 2500);
+}
+
+async function airtableFetch(method, body){
+  const res = await fetch(`https://api.airtable.com/v0/${BASE}/${encodeURIComponent(TABLE)}`, {
+    method,
+    headers: { Authorization:`Bearer ${TOKEN}`, 'Content-Type':'application/json' },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  return res.json();
+}
+
+async function loadEntries(){
+  document.getElementById('entriesList').innerHTML = '<div class="loading-state">読み込み中...</div>';
+  try {
+    let all = [], offset = null;
+    do {
+      const url = `https://api.airtable.com/v0/${BASE}/${encodeURIComponent(TABLE)}?pageSize=100` + (offset ? `&offset=${offset}` : '');
+      const res = await fetch(url, { headers:{ Authorization:`Bearer ${TOKEN}` } });
+      const json = await res.json();
+      all = all.concat(json.records || []);
+      offset = json.offset;
+    } while(offset);
+
+    cache = {};
+    all.forEach(r => {
+      const step = parseInt(r.fields['ステップ']);
+      if(!step) return;
+      if(!cache[step]) cache[step] = [];
+      cache[step].push({
+        id: r.id,
+        market:  r.fields['市場、プレイヤー'] || '',
+        general: r.fields['一般人データ']     || '',
+        student: r.fields['学生データ']       || '',
+        diff:    r.fields['差分']             || '',
+        urls:   (r.fields['参考URL'] || '').split('\n').filter(Boolean),
+        time:    r.createdTime ? new Date(r.createdTime).toLocaleString('ja-JP') : ''
+      });
+    });
+  } catch(e) {
+    showToast('読み込み失敗', true);
+  }
+  renderNav();
+  renderEntries();
+}
+
+function renderNav(){
+  const nav = document.getElementById('stepNav');
+  nav.innerHTML = STEPS.map(s => {
+    const count = (cache[s.num]||[]).length;
+    return `<button class="step-btn ${s.num===currentStep?'active':''} ${count>0?'has-data':''}"
+      onclick="selectStep(${s.num})">
+      <span class="step-num">${String(s.num).padStart(2,'0')}</span>
+      <span>${s.name}${count>0?' ('+count+')':''}</span>
+    </button>`;
+  }).join('');
+}
+
+function renderPanel(){
+  const s = STEPS.find(s=>s.num===currentStep);
+  document.getElementById('panelStep').textContent  = `STEP ${String(s.num).padStart(2,'0')}`;
+  document.getElementById('panelTitle').textContent = s.name;
+  document.getElementById('panelDesc').textContent  = s.desc;
+  renderEntries();
+}
+
+function renderEntries(){
+  const entries = cache[currentStep] || [];
+  document.getElementById('entriesCount').textContent = `${entries.length} 件の調査`;
+  const list = document.getElementById('entriesList');
+  if(entries.length === 0){
+    list.innerHTML = '<div class="empty-state">まだ調査内容がありません</div>';
+    return;
+  }
+  list.innerHTML = entries.map(e => `
+    <div class="entry-card">
+      <div class="entry-meta">${e.time}</div>
+      ${e.market  ? `<div class="entry-field"><div class="entry-field-label">市場・プレイヤー</div><div class="entry-field-value">${escHtml(e.market)}</div></div>` : ''}
+      ${e.general ? `<div class="entry-field"><div class="entry-field-label">一般人データ</div><div class="entry-field-value">${escHtml(e.general)}</div></div>` : ''}
+      ${e.student ? `<div class="entry-field"><div class="entry-field-label">学生データ</div><div class="entry-field-value">${escHtml(e.student)}</div></div>` : ''}
+      ${e.diff    ? `<div class="entry-field"><div class="entry-field-label">差分・気づき</div><div class="entry-field-value">${escHtml(e.diff)}</div></div>` : ''}
+      ${e.urls.length>0 ? `<div class="entry-urls">${e.urls.map(u=>`<a class="entry-url-tag" href="${escHtml(u)}" target="_blank">${escHtml(u)}</a>`).join('')}</div>` : ''}
+    </div>`).join('');
+}
+
+function selectStep(num){
+  currentStep = num;
+  clearForm();
+  renderNav();
+  renderPanel();
+}
+
+function addUrlField(){
+  const list = document.getElementById('urlList');
+  const id = `url_${urlCount++}`;
+  const row = document.createElement('div');
+  row.className = 'url-row';
+  row.id = id;
+  row.innerHTML = `<input type="text" placeholder="https://..." /><button class="btn-remove-url" onclick="document.getElementById('${id}').remove()">✕</button>`;
+  list.appendChild(row);
+}
+
+function getUrls(){
+  return Array.from(document.querySelectorAll('#urlList .url-row input')).map(i=>i.value.trim()).filter(Boolean);
+}
+
+async function submitEntry(){
+  const market  = document.getElementById('fieldMarket').value.trim();
+  const general = document.getElementById('fieldGeneral').value.trim();
+  const student = document.getElementById('fieldStudent').value.trim();
+  const diff    = document.getElementById('fieldDiff').value.trim();
+  const urls    = getUrls();
+
+  if(!market && !general && !student && !diff && urls.length===0){
+    showToast('内容を入力してください', true);
+    return;
+  }
+
+  const btn = document.getElementById('btnSubmit');
+  btn.disabled = true;
+  btn.textContent = '送信中...';
+
+  try {
+    const body = { records:[{ fields:{
+      'ステップ':     String(currentStep),
+      '市場、プレイヤー': market,
+      '一般人データ':   general,
+      '学生データ':    student,
+      '差分':         diff,
+      '参考URL':      urls.join('\n')
+    }}]};
+    const json = await airtableFetch('POST', body);
+    if(json.records){
+      showToast('Airtableに保存しました！');
+      clearForm();
+      await loadEntries();
+    } else {
+      showToast('保存失敗: ' + JSON.stringify(json), true);
+    }
+  } catch(e){
+    showToast('エラーが発生しました', true);
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'この内容を追加';
+}
+
+function clearForm(){
+  document.getElementById('fieldMarket').value  = '';
+  document.getElementById('fieldGeneral').value = '';
+  document.getElementById('fieldStudent').value = '';
+  document.getElementById('fieldDiff').value    = '';
+  document.getElementById('urlList').innerHTML  = '';
+}
+
+// ジャーニーテーブル描画
+const tbody = document.getElementById('journeyTable');
+STEPS.forEach(s => {
+  const tr = document.createElement('tr');
+  tr.style.cssText = 'cursor:pointer;transition:background .15s;';
+  tr.onmouseenter = ()=>tr.style.background='rgba(245,200,66,0.04)';
+  tr.onmouseleave = ()=>tr.style.background='';
+  tr.onclick = ()=>{ selectStep(s.num); window.scrollTo({top:0,behavior:'smooth'}); };
+  tr.innerHTML = `<td style="padding:11px 16px;border-bottom:1px solid #1e1e1e;color:#e8e8e8;font-weight:500;">${s.num}. ${s.name}</td><td style="padding:11px 16px;border-bottom:1px solid #1e1e1e;color:#aaa;">${s.desc}</td>`;
+  tbody.appendChild(tr);
+});
+
+// 起動
+renderPanel();
+addUrlField();
+loadEntries();
+</script>
+</body>
+</html>
